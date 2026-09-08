@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: crudpruebas
@@ -14,3 +17,12 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+# Configuracion PROPIA de la app (no la lee ningun starter de Spring,
+# la definimos nosotros y la leemos con ClimaApiProperties).
+# El api-key NUNCA va hardcodeado -- ${VAR:default} lee la variable de
+# entorno CLIMA_API_KEY, y si no existe usa "sin-configurar".
+app:
+  clima-api:
+    base-url: https://api.clima-externo.com
+    api-key: ${CLIMA_API_KEY:sin-configurar}
