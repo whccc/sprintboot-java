@@ -37,12 +37,21 @@ public class ProductoService {
         this.detalleProductoRepository = detalleProductoRepository;
     }
 
+    // @Transactional aca no es opcional: sin esto, la sesion de Hibernate solo
+    // sigue viva gracias a "Open Session In View" (que ata la sesion al hilo
+    // del request HTTP). Si este metodo se llama desde OTRO hilo (por ejemplo,
+    // dentro de un CompletableFuture.supplyAsync), OSIV no lo cubre y
+    // producto.getCategoria().getNombre() explota con LazyInitializationException.
+    // Con @Transactional, el metodo abre su PROPIA sesion, sin importar que
+    // hilo lo ejecute -- por eso es la forma correcta, no un parche.
+    @Transactional(readOnly = true)
     public List<ProductoResponse> listarTodos() {
         return productoRepository.findAll().stream()
                 .map(ProductoResponse::desde)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<ProductoResponse> buscarPorNombre(String nombre) {
         return productoRepository.findByNombreContainingIgnoreCase(nombre).stream()
                 .map(ProductoResponse::desde)
@@ -56,6 +65,7 @@ public class ProductoService {
                 .orElseThrow(() -> new ProductoNoEncontradoException(id));
     }
 
+    @Transactional(readOnly = true)
     public ProductoResponse buscarPorId(Long id) {
         return ProductoResponse.desde(buscarEntidadPorId(id));
     }
@@ -102,6 +112,7 @@ public class ProductoService {
 
     // Version CON el problema N+1: por cada producto que devuelve la query,
     // acceder a categoria.getNombre() dispara una consulta aparte.
+    @Transactional(readOnly = true)
     public List<ProductoResponse> buscarPorCategoriaSinFetch(String nombreCategoria) {
         return productoRepository.findByCategoriaNombre(nombreCategoria).stream()
                 .map(ProductoResponse::desde)
@@ -109,6 +120,7 @@ public class ProductoService {
     }
 
     // Version optimizada: una sola consulta con INNER JOIN.
+    @Transactional(readOnly = true)
     public List<ProductoResponse> buscarPorCategoriaConFetch(String nombreCategoria) {
         return productoRepository.buscarPorCategoriaConFetch(nombreCategoria).stream()
                 .map(ProductoResponse::desde)
