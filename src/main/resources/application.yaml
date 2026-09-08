@@ -18,7 +18,11 @@ spring:
       path: /h2-console
   jpa:
     hibernate:
-      ddl-auto: update
+      # "validate" (no "update"): Hibernate compara tus @Entity contra las
+      # tablas reales y falla al arrancar si no coinciden -- pero NUNCA
+      # modifica el esquema. Ahora el esquema lo maneja Flyway, con SQL
+      # explicito y versionado (src/main/resources/db/migration/).
+      ddl-auto: validate
     show-sql: true
 
 # Configuracion PROPIA de la app (no la lee ningun starter de Spring,
