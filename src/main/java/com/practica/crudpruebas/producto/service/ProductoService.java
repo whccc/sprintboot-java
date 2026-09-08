@@ -95,6 +95,28 @@ public class ProductoService {
         productoRepository.save(producto); // escritura EXPLICITA, no implicita
     }
 
+    // --- Demo: cuando SI hace falta save(), aunque el objeto venga de findById ---
+    //
+    // Este metodo NO tiene @Transactional. buscarEntidadPorId() llama a
+    // productoRepository.findById(), que TIENE su propia transaccion interna
+    // (la de Spring Data) -- esa transaccion abre y CIERRA en esa sola linea.
+    // El objeto que recibimos de vuelta ya es "detached": Hibernate dejo de
+    // vigilarlo apenas termino esa mini-transaccion.
+    public void demoSinTransactionalNiSave(Long id, String nuevoNombre) {
+        Producto producto = buscarEntidadPorId(id); // detached apenas retorna
+        producto.setNombre(nuevoNombre); // modifica un objeto Java suelto -- Hibernate no se entera
+        // sin save() -- se pierde. No hay dirty checking sobre un objeto detached.
+    }
+
+    // La MISMA situacion (sin @Transactional propio), pero CON save() explicito.
+    // save() sobre un objeto detached hace un "merge": lo vuelve a enganchar
+    // y genera el UPDATE -- y funciona porque save() TRAE su propia transaccion.
+    public void demoSinTransactionalConSave(Long id, String nuevoNombre) {
+        Producto producto = buscarEntidadPorId(id); // detached
+        producto.setNombre(nuevoNombre);
+        productoRepository.save(producto); // esto SI persiste, gracias al merge + su propia transaccion
+    }
+
     // Uso interno (otros metodos del Service la necesitan como ENTIDAD,
     // no como DTO, para poder modificarla y guardarla de nuevo).
     public Producto buscarEntidadPorId(Long id) {

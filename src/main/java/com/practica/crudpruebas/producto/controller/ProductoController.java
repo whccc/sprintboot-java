@@ -75,6 +75,18 @@ public class ProductoController {
         return "ejecutado con save() explicito dentro de un metodo readOnly=true -- revisa el GET";
     }
 
+    @PutMapping("/{id}/demo-sin-transactional-ni-save")
+    public String demoSinTransactionalNiSave(@PathVariable Long id, @RequestParam String nuevoNombre) {
+        productoService.demoSinTransactionalNiSave(id, nuevoNombre);
+        return "ejecutado SIN @Transactional y SIN save() -- revisa el GET";
+    }
+
+    @PutMapping("/{id}/demo-sin-transactional-con-save")
+    public String demoSinTransactionalConSave(@PathVariable Long id, @RequestParam String nuevoNombre) {
+        productoService.demoSinTransactionalConSave(id, nuevoNombre);
+        return "ejecutado SIN @Transactional pero CON save() -- revisa el GET";
+    }
+
     @PutMapping("/transferir-stock")
     public String transferirStock(@RequestParam Long origenId, @RequestParam Long destinoId, @RequestParam int cantidad) {
         productoService.transferirStock(origenId, destinoId, cantidad);
