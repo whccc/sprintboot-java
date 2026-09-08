@@ -58,6 +58,43 @@ public class ProductoService {
                 .toList();
     }
 
+    // --- Demo: que hace EXACTAMENTE readOnly (dirty checking) ---
+    //
+    // OJO: a proposito NO llamamos a productoRepository.save() en ninguno de
+    // los 2 metodos de abajo. La pregunta es: ¿se guarda el cambio igual?
+
+    // SIN readOnly: Hibernate trackea la entidad ("dirty checking"). Al hacer
+    // commit, compara el estado actual contra el original y, si difiere,
+    // genera el UPDATE el solo -- aunque nunca hayas llamado a save().
+    @Transactional
+    public void demoSinReadOnly(Long id, String nuevoNombre) {
+        Producto producto = buscarEntidadPorId(id);
+        producto.setNombre(nuevoNombre);
+        // sin save() -- y aun asi se va a guardar
+    }
+
+    // CON readOnly: Hibernate NO trackea cambios en las entidades cargadas.
+    // El setNombre() de aca abajo se pierde apenas termina el metodo --
+    // nunca se genera ningun UPDATE, ni con dirty checking ni sin el.
+    @Transactional(readOnly = true)
+    public void demoConReadOnly(Long id, String nuevoNombre) {
+        Producto producto = buscarEntidadPorId(id);
+        producto.setNombre(nuevoNombre);
+        // este cambio se descarta -- readOnly se lo impide a Hibernate
+    }
+
+    // FLUJO MIXTO: un paso de lectura (buscarEntidadPorId) + una escritura
+    // EXPLICITA (save(), no dirty checking implicito). Todo el metodo esta
+    // marcado readOnly = true. La pregunta: ¿el save() explicito se salva de
+    // la restriccion? -- @Transactional es UNA sola unidad, no se puede tener
+    // "una parte" readOnly y "otra parte" no, DENTRO del mismo metodo.
+    @Transactional(readOnly = true)
+    public void demoFlujoMixto(Long id, String nuevoNombre) {
+        Producto producto = buscarEntidadPorId(id); // esto SI es "solo obtener"
+        producto.setNombre(nuevoNombre);
+        productoRepository.save(producto); // escritura EXPLICITA, no implicita
+    }
+
     // Uso interno (otros metodos del Service la necesitan como ENTIDAD,
     // no como DTO, para poder modificarla y guardarla de nuevo).
     public Producto buscarEntidadPorId(Long id) {
@@ -136,6 +173,53 @@ public class ProductoService {
                 .orElseThrow(() -> new IllegalArgumentException("No existe la etiqueta " + etiquetaId));
         producto.agregarEtiqueta(etiqueta);
         return ProductoResponse.desde(productoRepository.save(producto));
+    }
+
+    // --- Ejemplo de ATOMICIDAD real: 2 escrituras que deben pasar juntas ---
+    //
+    // @Transactional (sin readOnly) porque escribimos en 2 filas distintas.
+    // Si la segunda escritura falla, Spring hace ROLLBACK de TODO el metodo --
+    // incluida la resta de stock del producto origen que ya habiamos hecho
+    // (aunque ese cambio siga "flotando" en memoria/en la sesion, nunca llega
+    // a la base de datos con COMMIT).
+    @Transactional
+    public void transferirStock(Long idOrigen, Long idDestino, int cantidad) {
+        Producto origen = buscarEntidadPorId(idOrigen);
+        if (origen.getStock() < cantidad) {
+            throw new IllegalArgumentException("Stock insuficiente en el producto origen");
+        }
+        origen.setStock(origen.getStock() - cantidad);
+        productoRepository.save(origen);
+
+        // Si idDestino no existe, esto tira ProductoNoEncontradoException DESPUES
+        // de haber "guardado" el origen -- pero como estamos en la MISMA
+        // transaccion, ese guardado nunca llega a confirmarse en la base.
+        Producto destino = buscarEntidadPorId(idDestino);
+        destino.setStock(destino.getStock() + cantidad);
+        productoRepository.save(destino);
+    }
+
+    // VERSION PELIGROSA: en vez de lanzar una excepcion cuando algo sale mal,
+    // "informa" el fallo devolviendo false. @Transactional NO mira el valor
+    // que devuelve el metodo -- solo reacciona a excepciones. Si no lanzas
+    // nada, Spring interpreta que el metodo termino BIEN y hace COMMIT de
+    // lo que ya se alcanzo a guardar, aunque el flujo logico haya "fallado".
+    @Transactional
+    public boolean transferirStockSinExcepcion(Long idOrigen, Long idDestino, int cantidad) {
+        Producto origen = buscarEntidadPorId(idOrigen);
+        if (origen.getStock() < cantidad) {
+            return false;
+        }
+        origen.setStock(origen.getStock() - cantidad);
+        productoRepository.save(origen); // esto SI se va a confirmar, aunque el metodo "falle" despues
+
+        Producto destino = productoRepository.findById(idDestino).orElse(null);
+        if (destino == null) {
+            return false; // "fallo", pero el metodo termina NORMAL -- no hay rollback
+        }
+        destino.setStock(destino.getStock() + cantidad);
+        productoRepository.save(destino);
+        return true;
     }
 
     // --- Relacion 1:1 (Producto <-> DetalleProducto) ---

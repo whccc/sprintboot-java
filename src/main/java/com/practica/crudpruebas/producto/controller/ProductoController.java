@@ -57,6 +57,36 @@ public class ProductoController {
         productoService.eliminar(id);
     }
 
+    @PutMapping("/{id}/demo-sin-readonly")
+    public String demoSinReadOnly(@PathVariable Long id, @RequestParam String nuevoNombre) {
+        productoService.demoSinReadOnly(id, nuevoNombre);
+        return "ejecutado sin @Transactional(readOnly) -- revisa el GET";
+    }
+
+    @PutMapping("/{id}/demo-con-readonly")
+    public String demoConReadOnly(@PathVariable Long id, @RequestParam String nuevoNombre) {
+        productoService.demoConReadOnly(id, nuevoNombre);
+        return "ejecutado CON @Transactional(readOnly=true) -- revisa el GET";
+    }
+
+    @PutMapping("/{id}/demo-flujo-mixto")
+    public String demoFlujoMixto(@PathVariable Long id, @RequestParam String nuevoNombre) {
+        productoService.demoFlujoMixto(id, nuevoNombre);
+        return "ejecutado con save() explicito dentro de un metodo readOnly=true -- revisa el GET";
+    }
+
+    @PutMapping("/transferir-stock")
+    public String transferirStock(@RequestParam Long origenId, @RequestParam Long destinoId, @RequestParam int cantidad) {
+        productoService.transferirStock(origenId, destinoId, cantidad);
+        return "transferencia OK";
+    }
+
+    @PutMapping("/transferir-stock-sin-excepcion")
+    public String transferirStockSinExcepcion(@RequestParam Long origenId, @RequestParam Long destinoId, @RequestParam int cantidad) {
+        boolean exito = productoService.transferirStockSinExcepcion(origenId, destinoId, cantidad);
+        return "resultado: " + exito;
+    }
+
     // --- N:1 ---
 
     @PutMapping("/{id}/categoria/{categoriaId}")
