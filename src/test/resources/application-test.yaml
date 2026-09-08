@@ -1,0 +1,13 @@
+# Perfil "test": se combina con application.yaml (no lo reemplaza), pisando
+# solo lo que se necesita distinto para @DataJpaTest.
+#
+# Nuestro proyecto conecta Flyway a mano con un BeanPostProcessor (ver
+# FlywayConfig.java) que solo se registra en el contexto COMPLETO de la app.
+# @DataJpaTest levanta un contexto reducido que no lo incluye -- por eso, en
+# los tests, dejamos que Hibernate cree el esquema el solo (create-drop),
+# en vez de depender de Flyway. El objetivo de estos tests es la QUERY, no
+# probar el proceso de migracion.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
