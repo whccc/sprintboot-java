@@ -36,6 +36,19 @@ public class ConfiguracionController {
         );
     }
 
+    // Demo de VIRTUAL THREADS. El nombre/tipo del hilo actual delata si Tomcat
+    // esta usando threads tradicionales ("http-nio-8080-exec-N") o virtuales
+    // ("VirtualThread[#N]/runnable@ForkJoinPool..."). Sin tocar nada de este
+    // codigo, un solo flag en el yaml cambia la respuesta.
+    @GetMapping("/api/config/hilo-actual")
+    public Map<String, String> hiloActual() {
+        Thread hiloActual = Thread.currentThread();
+        return Map.of(
+                "descripcion", hiloActual.toString(),
+                "esVirtual", String.valueOf(hiloActual.isVirtual())
+        );
+    }
+
     // Nunca se devuelve (ni se loguea) una API key completa, ni siquiera en un
     // endpoint de diagnostico interno.
     private String enmascarar(String valor) {
