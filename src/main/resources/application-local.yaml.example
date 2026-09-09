@@ -1,0 +1,11 @@
+# PLANTILLA -- este archivo SI se sube a git, para que cualquiera que clone
+# el proyecto sepa que datos necesita completar.
+#
+# Copialo como "application-local.yaml" (sin ".example") en esta misma
+# carpeta, completa tus credenciales reales, y corre la app con:
+#   SPRING_PROFILES_ACTIVE=local ./mvnw.cmd spring-boot:run
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//TU_HOST:1521/TU_SERVICE_NAME
+    username: TU_USUARIO
+    password: TU_CLAVE

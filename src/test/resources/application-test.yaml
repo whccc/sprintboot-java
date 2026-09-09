@@ -7,6 +7,10 @@
 # los tests, dejamos que Hibernate cree el esquema el solo (create-drop),
 # en vez de depender de Flyway. El objetivo de estos tests es la QUERY, no
 # probar el proceso de migracion.
+#
+# OJO: esto sigue apuntando a la MISMA Oracle real de application.yaml
+# (ver @AutoConfigureTestDatabase(replace = NONE) en ProductoRepositoryTest) --
+# sin una instancia real y alcanzable, estos tests no van a poder conectarse.
 spring:
   jpa:
     hibernate:

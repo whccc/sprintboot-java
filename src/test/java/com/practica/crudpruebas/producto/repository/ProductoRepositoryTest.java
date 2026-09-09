@@ -6,6 +6,7 @@ import com.practica.crudpruebas.producto.model.Producto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -14,12 +15,19 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // @DataJpaTest levanta SOLO la capa de persistencia (Hibernate + los
-// repositorios), no arranca Controllers ni Services -- y usa, por defecto,
-// una base de datos EN MEMORIA (aca, la misma H2 que usamos en dev).
-// Cada @Test corre en su propia transaccion, con ROLLBACK automatico al
-// final -- los datos de un test nunca contaminan al siguiente.
+// repositorios), no arranca Controllers ni Services.
+//
+// Por defecto, @DataJpaTest reemplaza el datasource configurado por uno
+// embebido (H2/Derby/HSQLDB) si encuentra alguno en el classpath -- ya no
+// tenemos ninguno (pasamos todo a Oracle), asi que ese reemplazo automatico
+// fallaria. Replace.NONE le dice "usa el datasource real de application.yaml",
+// es decir, la MISMA Oracle que usa la app en runtime.
+//
+// IMPORTANTE: sin una Oracle real y alcanzable, este test NO puede correr --
+// necesita una conexion de verdad, a diferencia de cuando usabamos H2.
 @DataJpaTest
-@ActiveProfiles("test") // usa application-test.yaml (ddl-auto: create-drop)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
 class ProductoRepositoryTest {
 
     @Autowired

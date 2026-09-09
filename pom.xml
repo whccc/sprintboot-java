@@ -50,15 +50,24 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
+		<!-- Driver JDBC oficial de Oracle (Maven Central lo distribuye libre,
+		     sin necesitar cuenta de Oracle para descargarlo). -->
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
+			<groupId>com.oracle.database.jdbc</groupId>
+			<artifactId>ojdbc11</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
+		</dependency>
+
+		<!-- Igual que nos paso con H2: el soporte de cada motor es un modulo
+		     aparte de flyway-core. -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-oracle</artifactId>
 		</dependency>
 
 		<dependency>
@@ -73,6 +82,15 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Trae @AutoConfigureTestDatabase: lo necesitamos para decirle a
+		     @DataJpaTest que NO reemplace el datasource por uno embebido
+		     (ya no hay H2 en el classpath; ahora es Oracle real tambien en tests). -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-jdbc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 
