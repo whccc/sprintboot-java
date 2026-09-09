@@ -23,6 +23,17 @@ public class ManejadorDeErrores {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
+    // Misma idea, para la excepcion equivalente del lado hexagonal --
+    // vive en un paquete de dominio distinto, pero el manejador global
+    // sigue siendo UNO SOLO para toda la app.
+    @ExceptionHandler(com.practica.crudpruebas.hexagonal.producto.domain.ProductoNoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> manejarNoEncontradoHexagonal(
+            com.practica.crudpruebas.hexagonal.producto.domain.ProductoNoEncontradoException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> manejarValidacion(MethodArgumentNotValidException ex) {
         Map<String, String> errores = new HashMap<>();
