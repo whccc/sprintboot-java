@@ -1,4 +1,4 @@
-package com.practica.crudpruebas.hexagonal.producto.infrastructure.web;
+package com.practica.crudpruebas.hexagonal.producto.presentacion;
 
 import com.practica.crudpruebas.hexagonal.producto.application.ProductoRequest;
 import com.practica.crudpruebas.hexagonal.producto.application.ProductoResponse;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@RestController
+@RestController("productoControllerHexagonal")
 @RequestMapping("/api/hexagonal/productos")
 public class ProductoController {
 

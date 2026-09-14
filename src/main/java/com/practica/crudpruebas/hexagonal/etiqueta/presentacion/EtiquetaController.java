@@ -1,4 +1,4 @@
-package com.practica.crudpruebas.hexagonal.etiqueta.infrastructure.web;
+package com.practica.crudpruebas.hexagonal.etiqueta.presentacion;
 
 import com.practica.crudpruebas.hexagonal.etiqueta.domain.Etiqueta;
 import com.practica.crudpruebas.hexagonal.etiqueta.domain.EtiquetaRepositorio;
@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
+@RestController("etiquetaControllerHexagonal")
 @RequestMapping("/api/hexagonal/etiquetas")
 public class EtiquetaController {
 

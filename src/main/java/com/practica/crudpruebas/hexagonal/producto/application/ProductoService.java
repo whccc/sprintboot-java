@@ -22,7 +22,7 @@ import java.util.Optional;
 // dominio). La responsabilidad de abrir/cerrar transacciones se movio a los
 // adaptadores (Ej: ProductoRepositorioImpl), que es quien de verdad sabe
 // que hay una sesion de Hibernate de por medio.
-@Service
+@Service("productoServiceHexagonal")
 public class ProductoService {
 
     private final ProductoRepositorio productoRepositorio;

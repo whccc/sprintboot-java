@@ -1,4 +1,4 @@
-package com.practica.crudpruebas.hexagonal.pedido.infrastructure.web;
+package com.practica.crudpruebas.hexagonal.pedido.presentacion;
 
 import com.practica.crudpruebas.hexagonal.pedido.application.PedidoRequest;
 import com.practica.crudpruebas.hexagonal.pedido.application.PedidoResponse;

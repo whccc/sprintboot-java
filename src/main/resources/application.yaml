@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: crudpruebas
+  # Con spring-boot-starter-webflux en el classpath (solo para tener
+  # WebClient), Spring podria dudar entre levantar un server servlet (Tomcat)
+  # o uno reactivo (Netty). Lo forzamos explicito: seguimos siendo MVC/Tomcat.
+  main:
+    web-application-type: servlet
   threads:
     virtual:
       enabled: true
