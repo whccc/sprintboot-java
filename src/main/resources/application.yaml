@@ -41,3 +41,10 @@ app:
   clima-api:
     base-url: https://api.clima-externo.com
     api-key: ${CLIMA_API_KEY:sin-configurar}
+  jwt:
+    # El secreto NUNCA hardcodeado de verdad -- mismo patron que el resto:
+    # variable de entorno en cualquier ambiente real. Tiene que ser largo
+    # (HS256 pide minimo 256 bits / 32 caracteres) -- este placeholder ya
+    # cumple esa longitud, pero de verdad HAY que reemplazarlo.
+    secret: ${JWT_SECRET:este-es-un-secreto-de-ejemplo-cambialo-en-produccion-1234}
+    expiracion-ms: 3600000  # 1 hora

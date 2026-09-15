@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,7 +52,12 @@ public class ProductoController {
         return productoService.actualizar(id, request);
     }
 
+    // @PreAuthorize corre ANTES del metodo -- si quien llama no tiene el rol
+    // ADMIN, ni siquiera se ejecuta el cuerpo, Spring devuelve 403 solo.
+    // hasRole("ADMIN") busca la autoridad "ROLE_ADMIN" (ver UsuarioDetailsService,
+    // que le agrega el prefijo "ROLE_" al rol guardado en la tabla usuario).
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id) {
         productoService.eliminar(id);

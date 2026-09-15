@@ -3,6 +3,8 @@ package com.practica.crudpruebas.common.exception;
 import com.practica.crudpruebas.producto.exception.ProductoNoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -40,5 +42,24 @@ public class ManejadorDeErrores {
         ex.getBindingResult().getFieldErrors()
                 .forEach(error -> errores.put(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errores);
+    }
+
+    // Login con usuario/clave incorrectos -- lo tira
+    // authenticationManager.authenticate() dentro de AuthController.login().
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, String>> manejarAutenticacion(AuthenticationException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put("error", "Usuario o clave incorrectos");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    // El usuario SI esta autenticado (el token es valido), pero no tiene el
+    // ROL necesario -- lo tira @PreAuthorize cuando la condicion da false.
+    // 401 = "no se quien sos". 403 = "se quien sos, pero no podes hacer esto".
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> manejarAccesoDenegado(AccessDeniedException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put("error", "No tenes permiso para esta operacion");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 }
