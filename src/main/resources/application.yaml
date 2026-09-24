@@ -48,3 +48,19 @@ app:
     # cumple esa longitud, pero de verdad HAY que reemplazarlo.
     secret: ${JWT_SECRET:este-es-un-secreto-de-ejemplo-cambialo-en-produccion-1234}
     expiracion-ms: 3600000  # 1 hora
+
+# Sin esto, Spring Boot loguea todo en INFO por default -- ni mucho ni
+# poco, un termino medio generico. "root" es el nivel de TODO lo que no
+# tenga una regla mas especifica (librerias de terceros incluidas).
+# "com.practica.crudpruebas" en DEBUG es MAS especifico que "root", asi
+# que gana para nuestro propio codigo -- vemos mas detalle solo de lo
+# que escribimos nosotros, sin inundarnos con el ruido de Hibernate/
+# Spring internals (que se quedan en INFO, via el nivel root).
+logging:
+  level:
+    root: INFO
+    com.practica.crudpruebas: DEBUG
+  pattern:
+    # %logger{36}: nombre de la clase que logueo, truncado a 36 caracteres
+    # -- asi cada linea dice DE DONDE salio, sin tener que adivinar.
+    console: "%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"

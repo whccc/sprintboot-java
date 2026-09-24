@@ -1,9 +1,12 @@
 package com.practica.crudpruebas.common.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +28,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
@@ -44,20 +49,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(7); // saca "Bearer "
-        String username = jwtService.extraerUsername(token);
 
-        // Solo autenticamos si: (1) hay username en el token, y (2) todavia
-        // no hay nadie autenticado en este request (evita pisar una
-        // autenticacion ya hecha por otro mecanismo).
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        try {
+            String username = jwtService.extraerUsername(token);
 
-            if (jwtService.esValido(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            // Solo autenticamos si: (1) hay username en el token, y (2)
+            // todavia no hay nadie autenticado en este request (evita pisar
+            // una autenticacion ya hecha por otro mecanismo).
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                if (jwtService.esValido(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.debug("Request autenticado via JWT para el usuario '{}'", username);
+                } else {
+                    log.warn("Token JWT invalido o expirado para el usuario '{}' desde {}",
+                            username, request.getRemoteAddr());
+                }
             }
+        } catch (JwtException ex) {
+            // Token malformado, firma invalida, o expirado (JJWT tira
+            // ExpiredJwtException/MalformedJwtException/SignatureException,
+            // todas heredan de JwtException). Sin este catch, esto se iba
+            // sin capturar hasta explotar como un 500 -- en vez de dejar que
+            // SecurityConfig decida (401/403) como con cualquier request sin
+            // autenticar. NUNCA se loguea el token en si, solo el motivo.
+            log.warn("Token JWT rechazado desde {}: {}", request.getRemoteAddr(), ex.getMessage());
         }
 
         filterChain.doFilter(request, response);
