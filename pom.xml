@@ -55,6 +55,31 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<!-- Actuator: expone endpoints tipo /actuator/health, /actuator/info,
+		     /actuator/metrics: pensados para que un load balancer, un
+		     Kubernetes liveness probe, o un dashboard de monitoreo consulten
+		     el estado de la app sin tener que inventar un endpoint propio
+		     para eso. Que endpoints quedan expuestos por HTTP se controla
+		     en application.yaml (management.endpoints.web.exposure.include):
+		     por default Spring SOLO expone health e info, a proposito: el
+		     resto (env, beans, heapdump...) puede filtrar informacion
+		     sensible si se expone sin pensar. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- OpenAPI/Swagger: escanea los @RestController y genera el spec
+		     automaticamente (no es springfox: ese ya no se mantiene, este
+		     es el estandar actual). Con "-ui" incluido, tambien sirve la
+		     interfaz visual en /swagger-ui.html: sin eso, solo tendrias
+		     el JSON crudo en /v3/api-docs. -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.8.5</version>
+		</dependency>
+
 		<!-- JJWT: generar y validar tokens JWT. No lo trae Spring Security
 		     por si solo: Spring Security valida CUALQUIER esquema de auth,
 		     JWT es una eleccion nuestra, no un default. -->
@@ -148,6 +173,18 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<!-- Sin esto, /actuator/info devuelve un objeto vacio {}.
+					     Este goal genera target/classes/META-INF/build-info.properties
+					     en cada build (nombre, version, momento del build): el
+					     endpoint "info" simplemente lee ese archivo, no hace nada
+					     "magico" en runtime. -->
+					<execution>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

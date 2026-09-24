@@ -63,8 +63,22 @@ public class SecurityConfig {
                 // Cada request se autentica de cero, con el token que trae.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // login/registro: publicos
-                        .anyRequest().authenticated()                  // todo lo demas: necesita token valido
+                        .requestMatchers("/api/auth/**").permitAll()        // login/registro: publicos
+                        // /actuator/health publico -- un load balancer o un
+                        // liveness probe de Kubernetes le pega SIN token
+                        // (no tiene forma de loguearse). show-details:
+                        // when-authorized en application.yaml ya se encarga
+                        // de que un caller anonimo solo vea UP/DOWN, sin
+                        // detalle interno. El resto de Actuator (metrics,
+                        // info) sigue cayendo en anyRequest().authenticated().
+                        .requestMatchers("/actuator/health/**").permitAll()
+                        // La documentacion en si tiene que ser publica --
+                        // si Swagger UI pidiera login para mostrarse, nadie
+                        // podria ver que endpoints existen sin ya tener un
+                        // token (huevo y gallina). "/v3/api-docs/**" es el
+                        // JSON crudo que Swagger UI consume por detras.
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .anyRequest().authenticated()                        // todo lo demas: necesita token valido
                 )
                 // Sin esto, Spring Security trata a un request SIN token como un
                 // usuario "anonimo autenticado" -- si le falta permiso, dispara

@@ -3,6 +3,9 @@ package com.practica.crudpruebas.usuario.controller;
 import com.practica.crudpruebas.common.security.JwtService;
 import com.practica.crudpruebas.usuario.model.Usuario;
 import com.practica.crudpruebas.usuario.repository.UsuarioRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 // necesita un token valido en el header Authorization.
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Autenticacion", description = "Registro y login -- los unicos 2 endpoints publicos de la API")
 public class AuthController {
 
     private final UsuarioRepository usuarioRepository;
@@ -32,6 +36,11 @@ public class AuthController {
 
     @PostMapping("/registro")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Registra un usuario nuevo y devuelve un token de una")
+    // SecurityRequirements() VACIO le dice a Swagger "este endpoint puntual
+    // NO hereda el bearerAuth global" -- sin esto, la UI le pondria el
+    // candado igual, aunque el endpoint sea publico de verdad.
+    @SecurityRequirements
     public TokenResponse registrar(@Valid @RequestBody RegistroRequest request) {
         if (usuarioRepository.existsByUsername(request.username())) {
             throw new IllegalArgumentException("Ya existe un usuario con ese username");
@@ -46,6 +55,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Autentica un usuario existente y devuelve un token")
+    @SecurityRequirements
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {
         // authenticate() hace todo el trabajo: busca el Usuario via
         // UsuarioDetailsService, compara la clave con passwordEncoder.matches(),

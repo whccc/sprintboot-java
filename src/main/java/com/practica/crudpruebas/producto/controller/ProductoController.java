@@ -5,6 +5,10 @@ import com.practica.crudpruebas.producto.dto.ProductoResponse;
 import com.practica.crudpruebas.producto.dto.ProductoResumen;
 import com.practica.crudpruebas.producto.model.DetalleProducto;
 import com.practica.crudpruebas.producto.service.ProductoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/productos")
+@Tag(name = "Productos (feature)", description = "CRUD por-feature, con demos de transacciones y relaciones JPA")
 public class ProductoController {
 
     private final ProductoService productoService;
@@ -59,6 +64,12 @@ public class ProductoController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Elimina un producto -- requiere rol ADMIN")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Eliminado correctamente"),
+            @ApiResponse(responseCode = "401", description = "No se mando token, o es invalido"),
+            @ApiResponse(responseCode = "403", description = "Token valido, pero sin rol ADMIN")
+    })
     public void eliminar(@PathVariable Long id) {
         productoService.eliminar(id);
     }

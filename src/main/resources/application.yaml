@@ -49,6 +49,27 @@ app:
     secret: ${JWT_SECRET:este-es-un-secreto-de-ejemplo-cambialo-en-produccion-1234}
     expiracion-ms: 3600000  # 1 hora
 
+# Actuator: por default Spring SOLO expone "health" e "info" por HTTP --
+# el resto de los endpoints (env, beans, metrics, threaddump...) existen
+# pero quedan apagados hasta que los listes aca a proposito. "metrics" lo
+# agregamos porque es el mas util para empezar (cuantos requests, memoria,
+# etc.) -- NUNCA agregues "*" (expone TODO, incluido "env": variables de
+# entorno, con secretos incluidos) salvo que sepas exactamente que estas
+# haciendo y quede bien protegido detras de autenticacion.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      # "when-authorized": el detalle (que componente puntual esta down --
+      # DB, disco, etc.) solo se ve autenticado. Un caller anonimo solo ve
+      # {"status":"UP"} o {"status":"DOWN"}, sin detalle -- evita filtrar
+      # de mas ("la base de datos X no responde en el host Y") a cualquiera
+      # que le pegue al endpoint publico.
+      show-details: when-authorized
+
 # Sin esto, Spring Boot loguea todo en INFO por default -- ni mucho ni
 # poco, un termino medio generico. "root" es el nivel de TODO lo que no
 # tenga una regla mas especifica (librerias de terceros incluidas).
