@@ -1,0 +1,70 @@
+# Levanta la app COMPLETA de punta a punta: Oracle real + la API -- lo que
+# toda la sesion no pudimos probar en vivo. docker-compose lee ".env" de
+# la raiz automaticamente (ver .env.example para la plantilla).
+#
+#   cp .env.example .env          # una sola vez, completando valores reales
+#   docker compose up --build     # levanta Oracle, espera a que este listo,
+#                                  # recien AHI arranca la app (ver depends_on)
+#
+# gvenzl/oracle-xe: imagen de Oracle XE community-maintained, pensada para
+# Docker (a diferencia de las imagenes oficiales de Oracle, que piden
+# cuenta y aceptar licencia para descargarlas). Trae "XEPDB1" como nombre
+# de pluggable database por default -- coincide con lo que application.yaml
+# ya espera, cero cambios ahi.
+services:
+  oracle:
+    image: gvenzl/oracle-xe:21-slim
+    environment:
+      # Clave de SYS/administrador -- la app nunca se conecta con este
+      # usuario, solo se usa para inicializar la instancia.
+      ORACLE_PASSWORD: ${ORACLE_SYS_PASSWORD:?falta ORACLE_SYS_PASSWORD en .env}
+      # La imagen CREA este usuario/clave automaticamente al arrancar --
+      # mismo usuario que application.yaml espera (crudpruebas_app),
+      # mismo nombre de variable que ya usa la app (ORACLE_DB_PASSWORD).
+      APP_USER: crudpruebas_app
+      APP_USER_PASSWORD: ${ORACLE_DB_PASSWORD:?falta ORACLE_DB_PASSWORD en .env}
+    ports:
+      # Publicado al host SOLO para poder conectarte con SQL Developer/DBeaver
+      # a mano si queres inspeccionar datos -- la app NO necesita este puerto
+      # publicado, se conecta directo por la red interna de docker-compose.
+      - "1521:1521"
+    volumes:
+      # Sin esto, cada "docker compose down" borra la base entera -- los
+      # datos viven en un volumen con nombre, que sobrevive a recrear el
+      # contenedor (no a "docker compose down -v", eso si lo borra).
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      # La imagen trae este script incluido -- Oracle tarda bastante en
+      # inicializar la primera vez (crear el pluggable database, el
+      # usuario app, etc.). Sin este healthcheck, "depends_on" solo
+      # esperaria a que el CONTENEDOR arranque, no a que Oracle este
+      # realmente listo para aceptar conexiones -- la app fallaria al
+      # intentar conectarse demasiado pronto.
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Unico cambio real vs application.yaml: el host. Dentro de la red
+      # de docker-compose, "oracle" (el nombre del servicio de arriba) SI
+      # resuelve -- Docker arma un DNS interno automatico entre servicios
+      # del mismo compose.
+      ORACLE_DB_HOST: oracle
+      ORACLE_DB_PASSWORD: ${ORACLE_DB_PASSWORD:?falta ORACLE_DB_PASSWORD en .env}
+      JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET en .env}
+      CLIMA_API_KEY: ${CLIMA_API_KEY:-sin-configurar}
+    depends_on:
+      oracle:
+        # "service_healthy", no solo "service_started" -- la diferencia
+        # exacta que evita que la app explote contra un Oracle que todavia
+        # esta inicializando.
+        condition: service_healthy
+
+volumes:
+  oracle-data:

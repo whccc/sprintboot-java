@@ -1,0 +1,19 @@
+# No tiene sentido mandar esto al build context de Docker -- lo que este
+# archivo excluye NUNCA se copia a la imagen, ni siquiera temporalmente.
+# Sin esto, "target/" (compilados viejos) y ".git" (todo el historial)
+# viajarian igual, inflando el contexto y volviendo el build mas lento.
+target/
+.git/
+.gitignore
+.mvn/wrapper/maven-wrapper.jar
+*.iml
+.idea/
+.vscode/
+*.log
+
+# Nunca metas un archivo con credenciales reales dentro de la imagen --
+# application-local.yaml es justamente ESE archivo (gitignored, con
+# secretos reales de desarrollo local). Las credenciales dentro de un
+# contenedor van por variables de entorno (ver docker-compose.yml), nunca
+# horneadas en la imagen.
+application-local.yaml

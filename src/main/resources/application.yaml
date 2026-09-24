@@ -20,7 +20,12 @@ spring:
   # ORACLE_DB_PASSWORD -- la clave NUNCA va hardcodeada de verdad en ningun
   # archivo que se suba a git.
   datasource:
-    url: jdbc:oracle:thin:@//localhost:1521/XEPDB1
+    # ORACLE_DB_HOST configurable por la misma razon que la clave: "localhost"
+    # solo tiene sentido corriendo la app FUERA de Docker, contra un Oracle
+    # levantado a mano. Dentro de docker-compose, el hostname de otro
+    # contenedor es el NOMBRE DEL SERVICIO (ver docker-compose.yml: "oracle"),
+    # nunca localhost -- cada contenedor tiene su propio "localhost" aislado.
+    url: jdbc:oracle:thin:@//${ORACLE_DB_HOST:localhost}:1521/XEPDB1
     driver-class-name: oracle.jdbc.OracleDriver
     username: crudpruebas_app
     password: ${ORACLE_DB_PASSWORD:cambiar-esta-clave}

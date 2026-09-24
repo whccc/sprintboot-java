@@ -5,6 +5,11 @@ target/
 application-local.yaml
 application-local.yml
 .mvn/wrapper/maven-wrapper.jar
+
+### docker-compose lee ".env" automaticamente -- mismo motivo que
+### application-local.yaml: credenciales reales, nunca a git. Ver
+### .env.example para la plantilla. ###
+.env
 !**/src/main/**/target/
 !**/src/test/**/target/
 
